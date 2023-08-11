@@ -7,7 +7,7 @@ import (
 )
 
 // Connect 初始化MQTT服务
-func Connect(servers []MQTTxServer, defaultPublishHandler mqtt.MessageHandler, onConnectHandler mqtt.OnConnectHandler, connectionLostHandler mqtt.ConnectionLostHandler, reconnectingHandler mqtt.ReconnectHandler) error {
+func Connect(servers []*MQTTxServer, defaultPublishHandler mqtt.MessageHandler, onConnectHandler mqtt.OnConnectHandler, connectionLostHandler mqtt.ConnectionLostHandler, reconnectingHandler mqtt.ReconnectHandler) error {
 	if len(servers) == 0 {
 		return errors.New("MQTTx servers is empty")
 	}
@@ -40,7 +40,10 @@ func Connect(servers []MQTTxServer, defaultPublishHandler mqtt.MessageHandler, o
 }
 
 // NewMQTTxClient 根据服务器的信息，创建MQTT客户端
-func NewMQTTxClient(server MQTTxServer) (*MQTTxClient, error) {
+func NewMQTTxClient(server *MQTTxServer) (*MQTTxClient, error) {
+	if server == nil {
+		return nil, errors.New("server is nil")
+	}
 	client := &MQTTxClient{
 		Vendor:   server.Vendor,
 		Scheme:   server.Scheme,
