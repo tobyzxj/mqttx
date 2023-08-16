@@ -7,8 +7,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-var MQTTxClientPools []*MQTTxClient // MQTT客户端连接
-
 // Cert 证书信息
 type Cert struct {
 	Cafile         string `json:"cafile"`           // CA证书文件路径
@@ -206,8 +204,9 @@ type MQTTxClient struct {
 	Password string `json:"password"`  // MQTT服务器密码
 
 	// MQTT连接相关
-	Opts   *mqtt.ClientOptions `json:"-"` // MQTT连接参数
-	Client mqtt.Client         `json:"-"` // MQTT客户端连接
+	Opts                  *mqtt.ClientOptions `json:"-"` // MQTT连接参数
+	Client                mqtt.Client         `json:"-"` // MQTT客户端连接
+	ServerConnectionCount int                 `json:"-"` // MQTT客户端所连接的服务器客户端连接数
 }
 
 // SetVendor 设置MQTT服务软件厂商
@@ -345,6 +344,28 @@ func (m *MQTTxClient) GetPassword() string {
 	return ""
 }
 
+// GetServerConnectionCount 获取MQTT客户端所连接的服务器客户端连接数
+func (m *MQTTxClient) GetServerConnectionCount() int {
+	if m == nil {
+		return 0
+	}
+	return m.ServerConnectionCount
+}
+
+// Server 获取MQTT服务器信息
+func (m *MQTTxClient) Server() string {
+	if m == nil {
+		return ""
+	}
+	scheme := m.Scheme
+	domain := m.Domain
+	port := m.Port
+	if domain == "" {
+		domain = m.IP
+	}
+	return scheme + "://" + domain + ":" + port
+}
+
 // Connect 连接MQTT服务器
 func (m *MQTTxClient) Connect(defaultPublishHandler mqtt.MessageHandler, onConnectHandler mqtt.OnConnectHandler, connectionLostHandler mqtt.ConnectionLostHandler, reconnectingHandler mqtt.ReconnectHandler) error {
 	if m == nil {
@@ -361,9 +382,16 @@ func (m *MQTTxClient) Connect(defaultPublishHandler mqtt.MessageHandler, onConne
 			}
 		}
 		m.Opts.AddBroker(scheme + "://" + m.Domain + ":" + m.Port)
+		if m.ClientID == "" {
+			return errors.New("MQTTxClient.ClientID is empty")
+		}
 		m.Opts.SetClientID(m.ClientID)
-		m.Opts.SetUsername(m.Username)
-		m.Opts.SetPassword(m.Password)
+		if m.Username != "" {
+			m.Opts.SetUsername(m.Username)
+		}
+		if m.Password != "" {
+			m.Opts.SetPassword(m.Password)
+		}
 		if m.Scheme == "tls" {
 			tlsConfig, err := NewTLSConfig(m.Cert.Cafile, m.Cert.ClientCertFile, m.Cert.ClientKeyFile)
 			if err != nil {

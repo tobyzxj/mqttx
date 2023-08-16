@@ -17,7 +17,6 @@ func Connect(servers []*MQTTxServer, defaultPublishHandler mqtt.MessageHandler, 
 		if err != nil {
 			return err
 		}
-		MQTTxClientPools = append(MQTTxClientPools, client)
 		TraceDebug("MQTT Client(%v - %v) Connect...: %v", k, v.Vendor, client)
 		if defaultPublishHandler == nil {
 			defaultPublishHandler = MQTTxHandlerDefault
@@ -35,6 +34,7 @@ func Connect(servers []*MQTTxServer, defaultPublishHandler mqtt.MessageHandler, 
 		if err != nil {
 			return err
 		}
+		ClientPool.Add(client)
 	}
 	return nil
 }
