@@ -416,6 +416,16 @@ func (m *MQTTxClient) SetOtherOpts(key, value string) {
 	}
 }
 
+// ClearOtherOpts 清空其他属性值
+func (m *MQTTxClient) ClearOtherOpts() {
+	if m != nil {
+		m.otherOptsMux.Lock()
+		defer m.otherOptsMux.Unlock()
+		m.ServerConnectionCount = 0
+		m.OtherOpts = nil
+	}
+}
+
 // Server 获取MQTT服务器信息
 func (m *MQTTxClient) Server() string {
 	if m == nil {

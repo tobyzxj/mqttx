@@ -7,6 +7,10 @@ import (
 var emqxCallbackOnConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 	cliOpts := client.OptionsReader()
 	server := cliOpts.Servers()[0].String()
+	cli := clientPool.Get(server)
+
+	// 清理客户端状态
+	cli.ClearOtherOpts()
 
 	// 订阅主题，每个工程需要订阅的主题不一样，需要在此处修改
 	topic := ""
