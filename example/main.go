@@ -10,6 +10,8 @@ import (
 // glog 全局日志变量
 var glog *logs.BeeLogger
 
+var clientPool *mqttx.MQTTxClientPool
+
 func main() {
 	// 设置日志
 	glog = logs.NewLogger(10000)
@@ -53,13 +55,15 @@ func main() {
 		},
 	}
 
+	clientPool = mqttx.NewMQTTxClientPool()
+
 	// 对不同的mqtt服务器进行对应的处理
 	for _, v := range servers {
 		switch v.Vendor {
 		case mqttx.MQTT_BROKER_MOSQUITTO:
 			var mqttServers []*mqttx.MQTTxServer
 			mqttServers = append(mqttServers, v)
-			err := mqttx.Connect(mqttServers, nil, mosquittoCallbackOnConnectHandler, nil, nil)
+			err := mqttx.Connect(clientPool, mqttServers, nil, mosquittoCallbackOnConnectHandler, nil, nil)
 			if err != nil {
 				glog.Error("connect to mosquitto failed: %v", err)
 				os.Exit(1)
@@ -67,7 +71,7 @@ func main() {
 		case mqttx.MQTT_BROKER_EMQX:
 			var mqttServers []*mqttx.MQTTxServer
 			mqttServers = append(mqttServers, v)
-			err := mqttx.Connect(mqttServers, nil, emqxCallbackOnConnectHandler, nil, nil)
+			err := mqttx.Connect(clientPool, mqttServers, nil, emqxCallbackOnConnectHandler, nil, nil)
 			if err != nil {
 				glog.Error("connect to emqx failed: %v", err)
 				os.Exit(1)
@@ -77,6 +81,18 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	go func() {
+		for {
+			client := clientPool.Get(servers[0].Server())
+			if client != nil {
+				glog.Debug("server(%v) IsConnected(%v) - connection count: %v, message: %s", client.Server(), client.Client.IsConnected(), client.GetServerConnectionCount(), client.GetOtherOpts("message"))
+			} else {
+				glog.Debug("server(%v) client is nil", servers[0].Server())
+			}
+			mqttx.SleepSecond(5)
+		}
+	}()
 
 	select {}
 }

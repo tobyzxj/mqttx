@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/GiterLab/mqttx"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -24,11 +23,12 @@ var MessageHandlerForEmqx mqtt.MessageHandler = func(client mqtt.Client, msg mqt
 	cliOpts := client.OptionsReader()
 	server := cliOpts.Servers()[0].String()
 
-	cli := mqttx.ClientPool.Get(server)
+	cli := clientPool.Get(server)
 	if cli != nil {
 		// test
 		glog.Debug("mqtt(%v) - client(%v) client info: %v", server, cliOpts.ClientID(), cli)
 	}
 
 	glog.Info("mqtt(%v) topic - data: %s, message: % X", server, msg.Topic(), msg.Payload())
+	cli.SetOtherOpts("message", string(msg.Payload()))
 }

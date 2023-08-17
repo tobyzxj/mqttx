@@ -5,15 +5,6 @@ import (
 	"sync"
 )
 
-var ClientPool *MQTTxClientPool
-
-func init() {
-	ClientPool = &MQTTxClientPool{
-		Clients: make([]*MQTTxClient, 0),
-		mux:     new(sync.RWMutex),
-	}
-}
-
 // MQTTxClientPool MQTT客户端连接池
 type MQTTxClientPool struct {
 	Clients []*MQTTxClient `json:"clients"` // MQTT客户端连接池
@@ -83,8 +74,17 @@ func (p *MQTTxClientPool) GetMinConnectionCountClient() *MQTTxClient {
 			return nil
 		}
 
-		min := p.Clients[0]
+		var min *MQTTxClient
 		for _, c := range p.Clients {
+			if min == nil {
+				if c.Client.IsConnected() {
+					min = c
+				}
+				continue
+			}
+			if !c.Client.IsConnected() {
+				continue
+			}
 			if c.GetServerConnectionCount() < min.GetServerConnectionCount() {
 				min = c
 			}
@@ -103,4 +103,13 @@ func (p MQTTxClientPool) String() string {
 		return ""
 	}
 	return string(body)
+}
+
+// NewMQTTxClientPool 创建一个MQTT客户端连接池
+func NewMQTTxClientPool() *MQTTxClientPool {
+	clientPool := &MQTTxClientPool{
+		Clients: make([]*MQTTxClient, 0),
+		mux:     new(sync.RWMutex),
+	}
+	return clientPool
 }

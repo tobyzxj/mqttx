@@ -2,12 +2,16 @@ package mqttx
 
 import (
 	"errors"
+	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 // Connect 初始化MQTT服务
-func Connect(servers []*MQTTxServer, defaultPublishHandler mqtt.MessageHandler, onConnectHandler mqtt.OnConnectHandler, connectionLostHandler mqtt.ConnectionLostHandler, reconnectingHandler mqtt.ReconnectHandler) error {
+func Connect(pool *MQTTxClientPool, servers []*MQTTxServer, defaultPublishHandler mqtt.MessageHandler, onConnectHandler mqtt.OnConnectHandler, connectionLostHandler mqtt.ConnectionLostHandler, reconnectingHandler mqtt.ReconnectHandler) error {
+	if pool == nil {
+		return errors.New("MQTTx client pool is nil")
+	}
 	if len(servers) == 0 {
 		return errors.New("MQTTx servers is empty")
 	}
@@ -34,7 +38,7 @@ func Connect(servers []*MQTTxServer, defaultPublishHandler mqtt.MessageHandler, 
 		if err != nil {
 			return err
 		}
-		ClientPool.Add(client)
+		pool.Add(client)
 	}
 	return nil
 }
@@ -45,17 +49,20 @@ func NewMQTTxClient(server *MQTTxServer) (*MQTTxClient, error) {
 		return nil, errors.New("server is nil")
 	}
 	client := &MQTTxClient{
-		Vendor:   server.Vendor,
-		Scheme:   server.Scheme,
-		Domain:   server.Domain,
-		IP:       server.IP,
-		Port:     server.Port,
-		Cert:     server.Cert,
-		ClientID: server.ClientID,
-		Username: server.Username,
-		Password: server.Password,
-		Opts:     nil,
-		Client:   nil,
+		Vendor:                server.Vendor,
+		Scheme:                server.Scheme,
+		Domain:                server.Domain,
+		IP:                    server.IP,
+		Port:                  server.Port,
+		Cert:                  server.Cert,
+		ClientID:              server.ClientID,
+		Username:              server.Username,
+		Password:              server.Password,
+		Opts:                  nil,
+		Client:                nil,
+		ServerConnectionCount: 0,
+		OtherOpts:             map[string]string{},
+		otherOptsMux:          &sync.RWMutex{},
 	}
 	return client, nil
 }

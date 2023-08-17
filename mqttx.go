@@ -3,8 +3,16 @@ package mqttx
 import (
 	"encoding/json"
 	"errors"
+	"math/bits"
+	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+)
+
+const (
+	MaxUint uint = (1 << bits.UintSize) - 1  // 无符号最大值
+	MaxInt  int  = (1<<bits.UintSize)/2 - 1  // 有符号最大值
+	MinInt  int  = (1 << bits.UintSize) / -2 // 有符号最小值
 )
 
 // Cert 证书信息
@@ -182,6 +190,20 @@ func (m *MQTTxServer) GetPassword() string {
 	return ""
 }
 
+// Server 获取MQTT服务器信息
+func (m *MQTTxServer) Server() string {
+	if m == nil {
+		return ""
+	}
+	scheme := m.Scheme
+	domain := m.Domain
+	port := m.Port
+	if domain == "" {
+		domain = m.IP
+	}
+	return scheme + "://" + domain + ":" + port
+}
+
 // String 序列化成字符串
 func (m *MQTTxServer) String() string {
 	body, err := json.Marshal(m)
@@ -204,9 +226,13 @@ type MQTTxClient struct {
 	Password string `json:"password"`  // MQTT服务器密码
 
 	// MQTT连接相关
-	Opts                  *mqtt.ClientOptions `json:"-"` // MQTT连接参数
-	Client                mqtt.Client         `json:"-"` // MQTT客户端连接
-	ServerConnectionCount int                 `json:"-"` // MQTT客户端所连接的服务器客户端连接数
+	Opts   *mqtt.ClientOptions `json:"-"` // MQTT连接参数
+	Client mqtt.Client         `json:"-"` // MQTT客户端连接
+
+	// 其他属性值
+	ServerConnectionCount int               `json:"-"` // MQTT客户端所连接的服务器客户端连接数
+	OtherOpts             map[string]string `json:"-"` // 其他属性值
+	otherOptsMux          *sync.RWMutex     `json:"-"` // 其他属性值读写锁
 }
 
 // SetVendor 设置MQTT服务软件厂商
@@ -346,10 +372,48 @@ func (m *MQTTxClient) GetPassword() string {
 
 // GetServerConnectionCount 获取MQTT客户端所连接的服务器客户端连接数
 func (m *MQTTxClient) GetServerConnectionCount() int {
-	if m == nil {
-		return 0
+	if m != nil {
+		m.otherOptsMux.RLock()
+		defer m.otherOptsMux.RUnlock()
+		if m.ServerConnectionCount == 0 {
+			return MaxInt
+		}
+		return m.ServerConnectionCount
 	}
-	return m.ServerConnectionCount
+	return MaxInt
+}
+
+// SetServerConnectionCount 设置MQTT客户端所连接的服务器客户端连接数
+func (m *MQTTxClient) SetServerConnectionCount(count int) {
+	if m != nil {
+		m.otherOptsMux.Lock()
+		defer m.otherOptsMux.Unlock()
+		m.ServerConnectionCount = count
+	}
+}
+
+// GetOtherOpts 获取其他属性值
+func (m *MQTTxClient) GetOtherOpts(key string) string {
+	if m != nil {
+		m.otherOptsMux.RLock()
+		defer m.otherOptsMux.RUnlock()
+		if m.OtherOpts != nil {
+			return m.OtherOpts[key]
+		}
+	}
+	return ""
+}
+
+// SetOtherOpts 设置其他属性值
+func (m *MQTTxClient) SetOtherOpts(key, value string) {
+	if m != nil {
+		m.otherOptsMux.Lock()
+		defer m.otherOptsMux.Unlock()
+		if m.OtherOpts == nil {
+			m.OtherOpts = make(map[string]string)
+		}
+		m.OtherOpts[key] = value
+	}
 }
 
 // Server 获取MQTT服务器信息
