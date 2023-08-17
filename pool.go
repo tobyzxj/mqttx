@@ -11,6 +11,17 @@ type MQTTxClientPool struct {
 	mux     *sync.RWMutex  // 读写锁
 }
 
+// GetClients 获取所有客户端连接
+func (p *MQTTxClientPool) GetClients() []*MQTTxClient {
+	if p != nil {
+		p.mux.RLock()
+		defer p.mux.RUnlock()
+
+		return p.Clients
+	}
+	return nil
+}
+
 // Len 返回连接池的长度
 func (p *MQTTxClientPool) Len() int {
 	if p != nil {
