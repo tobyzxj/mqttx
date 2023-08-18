@@ -1,12 +1,13 @@
 package main
 
 import (
+	"github.com/GiterLab/mqttx"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 var mosquittoCallbackOnConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client) {
 	cliOpts := client.OptionsReader()
-	server := cliOpts.Servers()[0].String()
+	server := mqttx.FormatServerAddr(cliOpts.Servers()[0].String())
 	cli := clientPool.Get(server)
 
 	// 清理客户端状态
@@ -25,8 +26,7 @@ var mosquittoCallbackOnConnectHandler mqtt.OnConnectHandler = func(client mqtt.C
 // MessageHandler 系统消息订阅
 var MessageHandlerForMosquitto mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	cliOpts := client.OptionsReader()
-	server := cliOpts.Servers()[0].String()
-
+	server := mqttx.FormatServerAddr(cliOpts.Servers()[0].String())
 	cli := clientPool.Get(server)
 	if cli != nil {
 		// test

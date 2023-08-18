@@ -88,7 +88,7 @@ func main() {
 			if client != nil {
 				glog.Debug("server(%v) IsConnected(%v) - connection count: %v, message: %s", client.Server(), client.Client.IsConnected(), client.GetServerConnectionCount(), client.GetOtherOpts("message"))
 			} else {
-				glog.Debug("server(%v) client is nil", servers[0].Server())
+				glog.Debug("server(%v) client is nil", mqttx.FormatServerAddr(servers[0].Server()))
 			}
 			mqttx.SleepSecond(5)
 		}

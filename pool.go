@@ -51,7 +51,7 @@ func (p *MQTTxClientPool) Remove(server string) {
 		defer p.mux.Unlock()
 
 		for i, c := range p.Clients {
-			if c.Server() == server {
+			if c.Server() == FormatServerAddr(server) {
 				p.Clients = append(p.Clients[:i], p.Clients[i+1:]...)
 				break
 			}
@@ -66,7 +66,7 @@ func (p *MQTTxClientPool) Get(server string) *MQTTxClient {
 		defer p.mux.RUnlock()
 
 		for _, c := range p.Clients {
-			if c.Server() == server {
+			if c.Server() == FormatServerAddr(server) {
 				return c
 			}
 		}

@@ -201,7 +201,7 @@ func (m *MQTTxServer) Server() string {
 	if domain == "" {
 		domain = m.IP
 	}
-	return scheme + "://" + domain + ":" + port
+	return FormatServerAddr(scheme + "://" + domain + ":" + port)
 }
 
 // String 序列化成字符串
@@ -451,7 +451,7 @@ func (m *MQTTxClient) Server() string {
 	if domain == "" {
 		domain = m.IP
 	}
-	return scheme + "://" + domain + ":" + port
+	return FormatServerAddr(scheme + "://" + domain + ":" + port)
 }
 
 // Connect 连接MQTT服务器
