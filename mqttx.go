@@ -392,16 +392,16 @@ func (m *MQTTxClient) SetServerConnectionCount(count int) {
 	}
 }
 
-// GetOtherOptsALL 获取其他所有属性值
-func (m *MQTTxClient) GetOtherOptsALL() map[string]string {
+// GetOtherOptsAll 获取其他所有属性值
+func (m *MQTTxClient) GetOtherOptsAll() map[string]string {
 	if m != nil {
 		m.otherOptsMux.RLock()
 		defer m.otherOptsMux.RUnlock()
-		m := make(map[string]string)
+		mm := make(map[string]string)
 		for k, v := range m.OtherOpts {
-			m[k] = v
+			mm[k] = v
 		}
-		return m
+		return mm
 	}
 	return nil
 }
