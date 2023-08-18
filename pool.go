@@ -100,6 +100,11 @@ func (p *MQTTxClientPool) GetMinConnectionCountClient() *MQTTxClient {
 				min = c
 			}
 		}
+		if min != nil {
+			if min.GetServerConnectionCount() == MaxInt {
+				return nil
+			}
+		}
 
 		return min
 	}
