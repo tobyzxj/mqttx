@@ -509,7 +509,12 @@ func (m *MQTTxClient) Connect(defaultPublishHandler mqtt.MessageHandler, onConne
 	}
 
 	m.Client = mqtt.NewClient(m.Opts)
-	if token := m.Client.Connect(); token.Wait() && token.Error() != nil {
+	token := m.Client.Connect()
+	isSuccess := token.WaitTimeout(10 * time.Second)
+	if !isSuccess {
+		return errors.New("MQTTxClient.Client.Connect timeout")
+	}
+	if isSuccess && token.Error() != nil {
 		return token.Error()
 	}
 	return nil
@@ -535,7 +540,13 @@ func (m *MQTTxClient) Publish(topic string, qos byte, retained bool, payload int
 	if m.Client == nil {
 		return errors.New("MQTTClient.Client is nil")
 	}
-	if token := m.Client.Publish(topic, qos, retained, payload); token.Wait() && token.Error() != nil {
+
+	token := m.Client.Publish(topic, qos, retained, payload)
+	isSuccess := token.WaitTimeout(10 * time.Second)
+	if !isSuccess {
+		return errors.New("MQTTClient.Client.Publish timeout")
+	}
+	if isSuccess && token.Error() != nil {
 		return token.Error()
 	}
 	return nil
@@ -549,7 +560,12 @@ func (m *MQTTxClient) Subscribe(topic string, qos byte, callback mqtt.MessageHan
 	if m.Client == nil {
 		return errors.New("MQTTClient.Client is nil")
 	}
-	if token := m.Client.Subscribe(topic, qos, callback); token.Wait() && token.Error() != nil {
+	token := m.Client.Subscribe(topic, qos, callback)
+	isSuccess := token.WaitTimeout(10 * time.Second)
+	if !isSuccess {
+		return errors.New("MQTTClient.Client.Subscribe timeout")
+	}
+	if isSuccess && token.Error() != nil {
 		return token.Error()
 	}
 	return nil

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/GiterLab/mqttx"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -18,7 +20,12 @@ var mosquittoCallbackOnConnectHandler mqtt.OnConnectHandler = func(client mqtt.C
 
 	topic = "mqttx/example/#"
 	glog.Debug("mqtt(%v) - client(%v) subscribe topic: %v", server, cliOpts.ClientID(), topic)
-	if token := client.Subscribe(topic, 0, MessageHandlerForMosquitto); token.Wait() && token.Error() != nil {
+	token := client.Subscribe(topic, 0, MessageHandlerForMosquitto)
+	isSeccess := token.WaitTimeout(10 * time.Second)
+	if !isSeccess {
+		glog.Error("mqtt(%v) - client(%v) subscribe topic timeout", server, cliOpts.ClientID())
+	}
+	if isSeccess && token.Error() != nil {
 		glog.Error("mqtt(%v) - client(%v) subscribe topic error: %v", server, cliOpts.ClientID(), token.Error())
 	}
 }
