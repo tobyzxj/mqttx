@@ -1,5 +1,7 @@
 package mqttx
 
+import "fmt"
+
 type MQTTLibDebug struct {
 	Level int
 }
@@ -10,30 +12,30 @@ func mqttLibDebugNew(level int) *MQTTLibDebug {
 
 func (l *MQTTLibDebug) Println(v ...interface{}) {
 	if l.Level <= LevelError {
-		TraceError("%v", v...)
+		TraceError("%v", fmt.Sprint(v...))
 		return
 	}
 	if l.Level <= LevelInformational {
-		TraceInfo("%v", v...)
+		TraceInfo("%v", fmt.Sprint(v...))
 		return
 	}
 	if l.Level <= LevelDebug {
-		TraceDebug("%v", v...)
+		TraceDebug("%v", fmt.Sprint(v...))
 		return
 	}
 }
 
 func (l *MQTTLibDebug) Printf(format string, v ...interface{}) {
 	if l.Level <= LevelError {
-		TraceError("%v", v...)
+		TraceError(format, v...)
 		return
 	}
 	if l.Level <= LevelInformational {
-		TraceInfo("%v", v...)
+		TraceInfo(format, v...)
 		return
 	}
 	if l.Level <= LevelDebug {
-		TraceDebug("%v", v...)
+		TraceDebug(format, v...)
 		return
 	}
 }
