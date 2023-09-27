@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/bits"
 	"sync"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -501,6 +502,10 @@ func (m *MQTTxClient) Connect(defaultPublishHandler mqtt.MessageHandler, onConne
 		if reconnectingHandler != nil {
 			m.Opts.SetReconnectingHandler(reconnectingHandler)
 		}
+		m.Opts.SetAutoReconnect(true)
+		m.Opts.SetConnectTimeout(10 * time.Second)      // 10 秒连接超时
+		m.Opts.SetConnectRetryInterval(5 * time.Second) // 5 秒重连间隔
+		m.Opts.SetMaxReconnectInterval(1 * time.Minute) // 1 分钟最大重连间隔
 	}
 
 	m.Client = mqtt.NewClient(m.Opts)

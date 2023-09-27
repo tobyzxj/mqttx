@@ -2,6 +2,8 @@ package mqttx
 
 import (
 	"log"
+
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 const (
@@ -30,6 +32,16 @@ func init() {
 // Debug Enable debug
 func Debug(enable bool) {
 	debugEnable = enable
+}
+
+// MqttLibDebug Enable mqtt lib debug
+func MqttLibDebug(enable bool, level int) {
+	if enable {
+		mqtt.ERROR = mqttLibDebugNew(LevelError)
+		mqtt.CRITICAL = mqttLibDebugNew(LevelCritical)
+		mqtt.WARN = mqttLibDebugNew(LevelWarning)
+		mqtt.DEBUG = mqttLibDebugNew(LevelDebug)
+	}
 }
 
 // SetUserDebug 配置其他日志输出
