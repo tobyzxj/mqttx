@@ -53,7 +53,7 @@ type MQTTxServer struct {
 	Cert     Cert   `json:"cert"`      // MQTT证书信息
 	ClientID string `json:"client_id"` // MQTT客户端ID, GID_GW101@@@deviceid
 	Username string `json:"username"`  // MQTT服务器用户名
-	Password string `json:"password"`  // MQTT服务器密码
+	Password string `json:"-"`         // MQTT服务器密码, 安全原因不序列化
 }
 
 // SetVendor 设置MQTT服务软件厂商
@@ -502,7 +502,9 @@ func (m *MQTTxClient) Connect(defaultPublishHandler mqtt.MessageHandler, onConne
 		if reconnectingHandler != nil {
 			m.Opts.SetReconnectingHandler(reconnectingHandler)
 		}
-		m.Opts.SetAutoReconnect(true)
+		m.Opts.SetCleanSession(true)                    // 清理会话
+		m.Opts.SetAutoReconnect(true)                   // 自动重连
+		m.Opts.SetKeepAlive(30 * time.Second)           // 30 秒心跳
 		m.Opts.SetConnectTimeout(10 * time.Second)      // 10 秒连接超时
 		m.Opts.SetConnectRetryInterval(5 * time.Second) // 5 秒重连间隔
 		m.Opts.SetMaxReconnectInterval(1 * time.Minute) // 1 分钟最大重连间隔

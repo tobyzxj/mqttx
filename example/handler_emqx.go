@@ -11,6 +11,10 @@ var emqxCallbackOnConnectHandler mqtt.OnConnectHandler = func(client mqtt.Client
 	cliOpts := client.OptionsReader()
 	server := mqttx.FormatServerAddr(cliOpts.Servers()[0].String())
 	cli := clientPool.Get(server)
+	if cli == nil {
+		glog.Error("mqtt(%v) - client(%v) not found", server, cliOpts.ClientID())
+		return
+	}
 
 	// 清理客户端状态
 	cli.ClearOtherOpts()
@@ -35,6 +39,11 @@ var MessageHandlerForEmqx mqtt.MessageHandler = func(client mqtt.Client, msg mqt
 	cliOpts := client.OptionsReader()
 	server := mqttx.FormatServerAddr(cliOpts.Servers()[0].String())
 	cli := clientPool.Get(server)
+	if cli == nil {
+		glog.Error("mqtt(%v) - client(%v) not found", server, cliOpts.ClientID())
+		return
+	}
+
 	if cli != nil {
 		// test
 		glog.Debug("mqtt(%v) - client(%v) client info: %v", server, cliOpts.ClientID(), cli)
