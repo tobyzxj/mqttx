@@ -58,11 +58,12 @@ func main() {
 	clientPool = mqttx.NewMQTTxClientPool()
 
 	// 对不同的mqtt服务器进行对应的处理
+	// 建议: 每一次调用 Connect 方法时，只传入一个服务器的配置
 	for _, v := range servers {
 		switch v.Vendor {
 		case mqttx.MQTT_BROKER_MOSQUITTO:
 			var mqttServers []*mqttx.MQTTxServer
-			mqttServers = append(mqttServers, v)
+			mqttServers = append(mqttServers, v) // 只设置 1 个服务器地址
 			err := mqttx.Connect(clientPool, mqttServers, nil, mosquittoCallbackOnConnectHandler, nil, nil)
 			if err != nil {
 				glog.Error("connect to mosquitto failed: %v", err)
@@ -70,7 +71,7 @@ func main() {
 			}
 		case mqttx.MQTT_BROKER_EMQX:
 			var mqttServers []*mqttx.MQTTxServer
-			mqttServers = append(mqttServers, v)
+			mqttServers = append(mqttServers, v) // 只设置 1 个服务器地址
 			err := mqttx.Connect(clientPool, mqttServers, nil, emqxCallbackOnConnectHandler, nil, nil)
 			if err != nil {
 				glog.Error("connect to emqx failed: %v", err)

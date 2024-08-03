@@ -112,6 +112,18 @@ func (p *MQTTxClientPool) GetMinConnectionCountClient() *MQTTxClient {
 	return nil
 }
 
+// Iterate 遍历所有客户端连接, 主要用于定时主动检查连接状态，如有必要进行重连操作
+func (p *MQTTxClientPool) Iterate(f func(c *MQTTxClient)) {
+	if p != nil {
+		p.mux.RLock()
+		defer p.mux.RUnlock()
+
+		for _, c := range p.Clients {
+			f(c)
+		}
+	}
+}
+
 // String 序列化成字符串
 func (p MQTTxClientPool) String() string {
 	body, err := json.Marshal(p)
