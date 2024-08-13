@@ -34,11 +34,12 @@ func Connect(pool *MQTTxClientPool, servers []*MQTTxServer, defaultPublishHandle
 		if reconnectingHandler == nil {
 			reconnectingHandler = MQTTxHandlerReconnecting
 		}
+		pool.Add(client)
 		err = client.Connect(defaultPublishHandler, onConnectHandler, connectionLostHandler, reconnectingHandler)
 		if err != nil {
+			pool.Remove(client.Server())
 			return err
 		}
-		pool.Add(client)
 	}
 	return nil
 }
